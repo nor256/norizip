@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Функция для отображения сообщения об ошибке
+error_message() {
+  zenity --error --text="$1"
+}
+
+# Функция для выбора папки для архивации
+select_directory() {
+  zenity --file-selection --directory --title="Выберите папку для архивации"
+}
+
+# Функция для создания архива
+create_archive() {
+  local directory=$(select_directory)
+  if [ -z "$directory" ]; then
+    exit 1  # Пользователь отменил выбор
+  fi
+
+  local archive_name=$(zenity --entry --title="Имя архива" --text="Введите имя архива (без расширения):")
+  if [ -z "$archive_name" ]; then
+    exit 1
+  fi
+
+  local format=$(zenity --list --title="Формат архива" --text="Выберите формат архива:" --radiolist \
+                     --column "ID" --column "Формат" --print-column=2 \
+                     1 "tar.gz" \
+                     2 "tar.bz2" \
+                     3 "zip")
+
+  if [ -z "$format" ]; then
+    exit 1
+  fi
+
+  local archive_file="$archive_name.$format"
+
+  # Создание архива в зависимости от выбранного формата
+  case "$format" in
+    "tar.gz")
+      tar -czvf "$archive_file" -C "$directory" .
+      ;;
+    "tar.bz2")
+      tar -cjvf "$archive_file" -C "$directory" .
+      ;;
+    "zip")
+      zip -r "$archive_file" "$directory"
+      ;;
+    *)
+      error_message "Неизвестный формат архива: $format"
+      exit 1
+      ;;
+  esac
+
+  if [ $? -eq 0 ]; then
+    zenity --info --text="Архив '$archive_file' успешно создан."
+  else
+    error_message "Ошибка при создании архива."
+  fi
+}
+
+# Главное меню
+while true; do
+  choice=$(zenity --list --title="Архиватор" --text="Выберите действие:" --radiolist \
+    --column "ID" --column "Действие" \
+    --print-column=2 \
+    1 "Создать архив" \
+    2 "Выход")
+
+  case "$choice" in
+    "Создать архив")
+      create_archive
+      ;;
+    "Выход")
+      exit 0
+      ;;
+    "")  # Пользователь закрыл окно
+      exit 0
+      ;;
+    *)
+      error_message "Неверный выбор."
+      ;;
+  esac
+done

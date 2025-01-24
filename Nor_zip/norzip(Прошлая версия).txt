@@ -1,0 +1,42 @@
+#!/bin/bash
+
+main_menu() {
+    ACTION=$(zenity --list --title="Nor" --column="Действие" 
+        --column="Создать архив" 
+        "Извлечь файлы" 
+        "Просмотреть содержимое" 
+        "Выйти")
+    case $ACTION in
+        "Создать архив")
+            create_archive_menu ;;
+        "Извлечь файлы")
+            extract_files_menu ;;
+        "Просмотреть содержимое")
+            list_contents_menu ;;
+        *)
+            exit 0 ;;
+    esac
+}
+
+create_archive_menu() {
+    FILES=$(zenity --file-selection --multiple --title="Выберите файлы для архивации")
+    ARCHIVE_NAME=$(zenity --entry --title="Имя архива" --text="Введите имя архива (без .zip):")
+    create_archive "$ARCHIVE_NAME" $FILES
+    zenity --info --text="Архив создан!"
+}
+
+extract_files_menu() {
+    ARCHIVE_NAME=$(zenity --file-selection --title="Выберите архив для извлечения")
+    FILES_TO_EXTRACT=$(zenity --entry --title="Файлы для извлечения" --text="Введите имена файлов через запятую:")
+    extract_files "$ARCHIVE_NAME" "$FILES_TO_EXTRACT"
+    zenity --info --text="Файлы извлечены!"
+}
+
+list_contents_menu() {
+    ARCHIVE_NAME=$(zenity --file-selection --title="Выберите архив для просмотра")
+    list_contents "$ARCHIVE_NAME"
+}
+
+while true; do
+    main_menu
+done

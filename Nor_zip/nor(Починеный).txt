@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Функция для отображения сообщения об ошибке
+error_message() {
+  zenity --error --text="$1"
+}
+
+# Функция для выбора файлов/директорий для архивации
+select_files() {
+  zenity --file-selection --multiple --directory
+}
+
+# Функция для создания архива
+create_archive() {
+  local files=$(select_files)
+  if [ -z "$files" ]; then
+    exit 1  # Пользователь отменил выбор
+  fi
+
+  local archive_name=$(zenity --entry --title="Имя архива" --text="Введите имя архива:")
+  if [ -z "$archive_name" ]; then
+    exit 1
+  fi
+
+  # Здесь нужно добавить логику для выбора формата архива, степени сжатия, пароля и т.д.
+  # Это можно сделать через дополнительные окна zenity
+
+  tar -czvf "$archive_name.tar.gz" $files
+
+  zenity --info --text="Архив '$archive_name.tar.gz' успешно создан."
+}
+
+# Главное меню
+while true; do
+  choice=$(zenity --list --title="Архиватор" --text="Выберите действие:" --radiolist \
+    --column "ID" --column "Действие" \
+    --print-column=2 \
+    1 "Создать архив" \
+    2 "Разархивировать" \
+    3 "Просмотреть содержимое" \
+    4 "Выход")
+
+  case "$choice" in
+    "Создать архив")
+      create_archive
+      ;;
+    "Разархивировать")
+      # Реализация разархивации
+      ;;
+    "Просмотреть содержимое")
+      # Реализация просмотра содержимого
+      ;;
+    "Выход")
+      exit 0
+      ;;
+    "")  # Пользователь закрыл окно
+      exit 0
+      ;;
+    *)
+      error_message "Неверный выбор."
+      ;;
+  esac
+done
